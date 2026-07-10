@@ -1,0 +1,26 @@
+syntax = "proto3";
+package modernizer;
+option java_package = "com.modernizer.grpc";
+option java_multiple_files = true;
+
+service ParserService {
+  // Streaming: sidecar streams parsed units chunk-by-chunk
+  rpc ParseModule (ParseRequest) returns (stream ParsedUnit);
+}
+
+message ParseRequest {
+  string moduleId = 1;
+  string framework = 2;        // ANGULAR | ANGULARJS | JSP | JS | TS
+  string workspaceRef = 3;
+  repeated string filePaths = 4;
+}
+
+message ParsedUnit {
+  string id = 1;
+  string kind = 2;             // CLASS | COMPONENT | SERVICE | METHOD...
+  string domain = 3;           // BACKEND | FRONTEND
+  string filePath = 4;
+  repeated string dependsOn = 5;
+  repeated string apiCalls = 6;
+  string rawAstJson = 7;       // optional escape hatch
+}

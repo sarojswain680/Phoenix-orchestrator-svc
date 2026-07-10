@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: orchestrator-service
+  datasource:
+    url: jdbc:postgresql://localhost:5433/modernizer
+    username: modernizer
+    password: modernizer
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+  data:
+    redis:
+      host: localhost
+      port: 6380
+  rabbitmq:
+    host: localhost
+  ai:
+    vertex:
+      ai:
+        gemini:
+          project-id: ${GCP_PROJECT:dummy}
+          location: us-central1
+          chat:
+            options:
+              model: gemini-2.5-pro
+              temperature: 0.1
+  flyway:
+    enabled: true
+grpc:
+  client:
+    parser-sidecar:
+      address: static://localhost:50051
+      negotiation-type: plaintext
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      sidecar: { slidingWindowSize: 10, failureRateThreshold: 50 }
+      geminiAgent: { slidingWindowSize: 10, failureRateThreshold: 50 }
+  retry:
+    instances:
+      sidecar: { maxAttempts: 3, waitDuration: 2s }
+      geminiAgent: { maxAttempts: 3, waitDuration: 2s }
+
+storage:
+  s3:
+    endpoint: http://localhost:9000    # MinIO
+    bucket: legacy-artifacts
+
+server:
+  port: 8080

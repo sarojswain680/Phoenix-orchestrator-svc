@@ -1,0 +1,110 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+######################
+# Maven
+######################
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+######################
+# Gradle (if used)
+######################
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+######################
+# IDE - IntelliJ IDEA
+######################
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+######################
+# IDE - Eclipse / STS
+######################
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+######################
+# IDE - VS Code
+######################
+.vscode/
+
+######################
+# macOS
+######################
+.DS_Store
+.AppleDouble
+.LSOverride
+
+######################
+# Logs & Temp
+######################
+*.log
+logs/
+*.tmp
+
+######################
+# 🔐 SECRETS - CRITICAL!
+# Spring AI (Gemini/OpenAI) API keys, DB creds
+######################
+.env
+*.env
+application-local.properties
+application-secret.yml
+application-secret.yaml
+src/main/resources/application-local.yml
+**/secrets/
+*.pem
+*.key
+
+######################
+# Spring Boot
+######################
+spring-boot-*.jar

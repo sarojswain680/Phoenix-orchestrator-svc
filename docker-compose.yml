@@ -1,0 +1,23 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:16
+    container_name: modernizer-postgres
+    environment:
+      POSTGRES_DB: modernizer
+      POSTGRES_USER: modernizer
+      POSTGRES_PASSWORD: modernizer
+    ports: 
+    - "5433:5432" 
+
+  redis:
+    image: redis:7
+    container_name: modernizer-redis
+    ports:
+      - "6380:6379" 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: modernizer-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
