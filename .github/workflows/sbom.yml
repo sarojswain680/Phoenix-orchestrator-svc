@@ -1,0 +1,51 @@
+name: "📜 SBOM Generation"
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: sbom-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  generate-sbom:
+    name: Generate CycloneDX SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🔧 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Uses the CycloneDX Gradle plugin (config added in Part 2)
+      - name: 📜 Generate SBOM (CycloneDX)
+        run: ./gradlew cyclonedxBom
+
+      - name: 📤 Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: build/reports/bom.json
+          retention-days: 90
+
+      # Optional but recommended: scan the SBOM itself for vulnerabilities
+      - name: 🔎 Scan SBOM with Grype
+        uses: anchore/scan-action@v4
+        with:
+          sbom: "build/reports/bom.json"
+          fail-build: true
+          severity-cutoff: high
