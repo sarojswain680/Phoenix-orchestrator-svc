@@ -30,7 +30,7 @@ jobs:
     name: "PR Title Lint"
     runs-on: ubuntu-latest
     steps:
-      - name: ✅ Validate Conventional Commit PR title
+      - name: ✅ Validate PR title (Conventional Commits)
         uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,6 +48,12 @@ jobs:
             chore
             revert
           requireScope: false
+             # Subject must start with a letter (no "feat: Fixed thing" with caps issues, etc.)
+          subjectPattern: ^[A-Za-z].+$
+          subjectPatternError: |
+            The subject "{subject}" must start with a letter.
+          # Post a helpful comment if the title is wrong (better DX)
+          wip: true
 
   format-check:
     name: "Format (Spotless)"
