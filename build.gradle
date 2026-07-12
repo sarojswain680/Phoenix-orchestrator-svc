@@ -1,8 +1,10 @@
 plugins {
 	id 'java'
+    id 'jacoco'                                            
 	id 'org.springframework.boot' version '4.1.0'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'com.google.protobuf' version '0.9.4'
+    id 'org.owasp.dependencycheck' version '10.0.4'  
 }
 
 group = 'com.modernizer'
@@ -12,6 +14,66 @@ java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
+}
+
+// ---------- JaCoCo Coverage (Pipeline 1) ----------
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        html.required = true
+        xml.required = true
+    }
+}
+
+// Enforce the 95% coverage rule
+jacocoTestCoverageVerification {
+
+    dependsOn jacocoTestReport
+
+    // Exclude generated / config / DTO classes from the coverage denominator
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/config/**',
+                    '**/dto/**',
+                    '**/model/**',                       // records
+                    '**/*Application*',                  // main class
+                    '**/entity/**',
+                ])
+            })
+        )
+    }
+
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value   = 'COVEREDRATIO'
+                minimum = 0.95  // 95%
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+
+// ---------- OWASP Dependency Check (Pipeline 2) ----------
+dependencyCheck {
+    failBuildOnCVSS = 7.0   // Fail build on High/Critical CVEs
+    formats = ['HTML', 'JSON']
+    nvd {
+        apiKey = System.getenv('NVD_API_KEY')
+    }
 }
 
 configurations {
