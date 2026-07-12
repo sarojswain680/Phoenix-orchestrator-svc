@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication
 @EnableAsync
 public class OrchestratorServiceApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(OrchestratorServiceApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(OrchestratorServiceApplication.class, args);
+  }
 }

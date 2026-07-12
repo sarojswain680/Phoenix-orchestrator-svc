@@ -7,11 +7,14 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class JavaAstAdapter implements AstAdapter {
-    @Override public String supportsLanguage() { return "JAVA"; }
+  @Override
+  public String supportsLanguage() {
+    return "JAVA";
+  }
 
-    @Override
-    public void parse(PipelineContext ctx, Object module) {
-        log.info("[JavaAstAdapter] parsing module (deterministic, JavaParser)");
-        // TODO: JavaParser + SymbolSolver → deterministic AST (NOT LLM!)
-    }
+  @Override
+  public void parse(PipelineContext ctx, Object module) {
+    log.info("[JavaAstAdapter] parsing module (deterministic, JavaParser)");
+    // TODO: JavaParser + SymbolSolver → deterministic AST (NOT LLM!)
+  }
 }

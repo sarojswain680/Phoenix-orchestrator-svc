@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Order(4)
 public class BuildGraphStep implements PipelineStep {
 
-    @Override
-    public String name() {
-        return "BUILD_GRAPH";
-    }
+  @Override
+  public String name() {
+    return "BUILD_GRAPH";
+  }
 
-    @Override
-    public void execute(PipelineContext ctx) {
-        // TODO: build dependency graph + FE<->BE cross-link
-    }
+  @Override
+  public void execute(PipelineContext ctx) {
+    // TODO: build dependency graph + FE<->BE cross-link
+  }
 }

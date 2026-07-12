@@ -14,7 +14,7 @@ permissions:
   contents: read
   security-events: write
   pull-requests: write
-
+  issues: write 
 # ==============================================================================
 # Reusable setup is repeated per job because GitHub jobs run on separate runners.
 # Gradle caching (setup-gradle) makes repeated setups cheap.

@@ -1,1 +1,13 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral() // Adds Maven Central as a fallback to resolve PITest and Jgrapht plugins
+    }
+}
+
+plugins {
+    // Enables Spring Boot's standard toolchain resolution
+    id "org.gradle.toolchains.foojay-resolver-convention" version "0.8.0"
+}
+
 rootProject.name = 'orchestrator-service'

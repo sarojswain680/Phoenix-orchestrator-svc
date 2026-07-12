@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Order(1)
 public class ScanPartitionStep implements PipelineStep {
 
-    @Override
-    public String name() {
-        return "SCAN_PARTITION";
-    }
+  @Override
+  public String name() {
+    return "SCAN_PARTITION";
+  }
 
-    @Override
-    public void execute(PipelineContext ctx) {
-        // TODO: walk workspace → classify files → partition FE/BE modules
-    }
+  @Override
+  public void execute(PipelineContext ctx) {
+    // TODO: walk workspace → classify files → partition FE/BE modules
+  }
 }

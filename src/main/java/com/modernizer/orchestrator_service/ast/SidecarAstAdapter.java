@@ -8,14 +8,14 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class SidecarAstAdapter implements AstAdapter {
 
-    @Override
-    public String supportsLanguage() {
-        return "JS";
-    }
+  @Override
+  public String supportsLanguage() {
+    return "JS";
+  }
 
-    @Override
-    public void parse(PipelineContext ctx, Object module) {
-        log.info("[SidecarAstAdapter] would call Node sidecar via gRPC");
-        // TODO: gRPC streaming call to Node parser sidecar
-    }
+  @Override
+  public void parse(PipelineContext ctx, Object module) {
+    log.info("[SidecarAstAdapter] would call Node sidecar via gRPC");
+    // TODO: gRPC streaming call to Node parser sidecar
+  }
 }

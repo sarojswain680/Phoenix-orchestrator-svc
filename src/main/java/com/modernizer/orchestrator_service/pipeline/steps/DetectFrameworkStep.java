@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Order(2)
 public class DetectFrameworkStep implements PipelineStep {
 
-    @Override
-    public String name() {
-        return "DETECT_FRAMEWORK";
-    }
+  @Override
+  public String name() {
+    return "DETECT_FRAMEWORK";
+  }
 
-    @Override
-    public void execute(PipelineContext ctx) {
-        // TODO: layered detection (extension → manifest → heuristic → LLM tiebreak)
-    }
+  @Override
+  public void execute(PipelineContext ctx) {
+    // TODO: layered detection (extension → manifest → heuristic → LLM tiebreak)
+  }
 }
