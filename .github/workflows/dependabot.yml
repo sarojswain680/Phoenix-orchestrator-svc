@@ -1,0 +1,47 @@
+version: 2
+updates:
+  # ---- Gradle dependencies ----
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "gradle"
+    commit-message:
+      prefix: "chore(deps)"       # Conventional Commits compatible
+    # Group minor/patch bumps to reduce PR noise
+    groups:
+      spring:
+        patterns:
+          - "org.springframework*"
+          - "io.spring*"
+      grpc:
+        patterns:
+          - "io.grpc*"
+          - "com.google.protobuf*"
+
+  # ---- GitHub Actions versions ----
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci(deps)"
+
+  # ---- Docker base image ----
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"

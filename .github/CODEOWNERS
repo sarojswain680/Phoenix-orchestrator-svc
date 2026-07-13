@@ -1,0 +1,65 @@
+# ==============================================================================
+# CODEOWNERS — Orchestrator Service
+# ==============================================================================
+# These owners are automatically requested for review when a PR touches
+# matching files. Combined with branch protection ("Require review from
+# Code Owners"), this ENFORCES that the right people approve changes.
+#
+# Syntax: <path pattern>   <@user or @org/team>
+# Later matches take precedence over earlier ones.
+#
+# ⚠️ REPLACE all @placeholders with your real GitHub usernames / teams.
+# ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+# Default owner — applies to everything unless overridden below
+# ------------------------------------------------------------------------------
+*                               @sarojswain680
+
+
+# ------------------------------------------------------------------------------
+# 🔐 Security-critical areas — require security-savvy reviewers
+# ------------------------------------------------------------------------------
+/src/main/java/com/modernizer/orchestrator_service/source/security/   @sarojswain680
+.gitleaks.toml                                                         @sarojswain680
+
+
+# ------------------------------------------------------------------------------
+# 🤖 AI / Spring AI layer — enrichment & Gemini integration
+# ------------------------------------------------------------------------------
+/src/main/java/com/modernizer/orchestrator_service/enrich/            @sarojswain680
+/src/main/java/com/modernizer/orchestrator_service/config/AiConfig.java  @sarojswain680
+
+
+# ------------------------------------------------------------------------------
+# 🗄️ Storage tiers (Hot / Warm / Cold) — data & infra owners
+# ------------------------------------------------------------------------------
+/src/main/java/com/modernizer/orchestrator_service/storage/           @sarojswain680
+/src/main/java/com/modernizer/orchestrator_service/persistence/       @sarojswain680
+
+
+# ------------------------------------------------------------------------------
+# 🔄 Core pipeline & AST logic — core engineering owners
+# ------------------------------------------------------------------------------
+/src/main/java/com/modernizer/orchestrator_service/pipeline/          @sarojswain680
+/src/main/java/com/modernizer/orchestrator_service/ast/               @sarojswain680
+/src/main/java/com/modernizer/orchestrator_service/graph/             @sarojswain680
+
+
+# ------------------------------------------------------------------------------
+# ⚙️ CI / CD / Infra config — DevOps owns anything that gates or deploys
+# ------------------------------------------------------------------------------
+/.github/                                                             @sarojswain680
+/build.gradle                                                         @sarojswain680
+/settings.gradle                                                      @sarojswain680
+/gradle/                                                              @sarojswain680
+Dockerfile                                                            @sarojswain680
+/k8s/                                                                 @sarojswain680
+
+
+# ------------------------------------------------------------------------------
+# 📄 Docs — anyone on the team can own, keep it light
+# ------------------------------------------------------------------------------
+*.md                                                                  @sarojswain680
+/docs/                                                                @sarojswain680

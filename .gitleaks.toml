@@ -1,0 +1,55 @@
+# .gitleaks.toml
+# Extends the default Gitleaks ruleset, then adds allowlists
+# to suppress common false positives in a Spring Boot / Spring AI project.
+
+title = "Orchestrator Service Gitleaks Config"
+
+[extend]
+# Inherit all default detection rules (AWS keys, GitHub tokens, etc.)
+useDefault = true
+
+[allowlist]
+description = "Global allowlist to reduce false positives"
+
+# ----- Ignore these files/paths entirely -----
+paths = [
+  '''.*\.md$''',                      # Documentation / README
+  '''.*\.txt$''',
+  '''gradlew''',                      # Gradle wrapper script
+  '''gradlew\.bat''',
+  '''gradle/wrapper/.*''',            # Gradle wrapper jars/props
+  '''.*/test/.*''',                   # Test fixtures often hold dummy secrets
+  '''.*/resources/.*\.yml$''',        # Config templates (they use ${ENV_VARS})
+  '''.*/resources/.*\.properties$''',
+  '''\.github/workflows/.*''',        # CI files reference secrets by name only
+]
+
+# ----- Ignore these known-safe placeholder patterns -----
+regexes = [
+  '''\$\{[A-Z_]+\}''',                # Spring env placeholders: ${GEMINI_API_KEY}
+  '''your-key''',                     # README placeholder
+  '''your-actual-key''',
+  '''AIzaSy[_-]?EXAMPLE''',           # Example Gemini keys in docs
+  '''(?i)example[_-]?api[_-]?key''',
+  '''(?i)dummy[_-]?(secret|token|password)''',
+  '''(?i)fake[_-]?(secret|token|password)''',
+  '''(?i)test[_-]?(secret|token|password)''',
+  '''changeme''',
+  '''xxxx+''',                        # masked values
+  '''\*{4,}''',                       # masked values ****
+]
+
+# ----- Allowlist specific commits (if you already rotated a leaked key) -----
+# commits = [ "commit-sha-here" ]
+
+# ----- Custom rule tuning: raise entropy threshold to reduce noise -----
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key (tuned)"
+regex = '''(?i)(?:key|api|token|secret|password|passwd|pwd)["'\s]*[:=]["'\s]*([0-9a-zA-Z\-_]{20,})'''
+entropy = 3.7          # Higher = fewer false positives
+keywords = ["key", "api", "token", "secret", "password"]
+[rules.allowlist]
+regexes = [
+  '''\$\{[A-Z_]+\}''',   # Don't flag env var references
+]

@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Order(5)
 public class EnrichmentStep implements PipelineStep {
 
-    @Override
-    public String name() {
-        return "ENRICHMENT";
-    }
+  @Override
+  public String name() {
+    return "ENRICHMENT";
+  }
 
-    @Override
-    public void execute(PipelineContext ctx) {
-        // TODO: Gemini SEMANTIC ENRICHMENT ONLY (send signatures, not full code)
-    }
+  @Override
+  public void execute(PipelineContext ctx) {
+    // TODO: Gemini SEMANTIC ENRICHMENT ONLY (send signatures, not full code)
+  }
 }

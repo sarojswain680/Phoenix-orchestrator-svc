@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Order(6)
 public class VerificationStep implements PipelineStep {
 
-    @Override
-    public String name() {
-        return "VERIFICATION";
-    }
+  @Override
+  public String name() {
+    return "VERIFICATION";
+  }
 
-    @Override
-    public void execute(PipelineContext ctx) {
-        // TODO: round-trip + structural invariants + confidence score
-    }
+  @Override
+  public void execute(PipelineContext ctx) {
+    // TODO: round-trip + structural invariants + confidence score
+  }
 }
