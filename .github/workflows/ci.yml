@@ -33,12 +33,13 @@ jobs:
   pr-title-lint:
     name: "PR Title Lint"
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'  # Only run on PR events
     permissions:
       pull-requests: read
       contents: read
     steps:
       - name: ✅ Validate PR title (Conventional Commits)
-        uses: amannn/action-semantic-pull-request@v5
+        uses: amannn/action-semantic-pull-request@v5.4.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -99,7 +100,7 @@ jobs:
         with: { distribution: 'temurin', java-version: '21' }
       - uses: gradle/actions/setup-gradle@v4
       - name: 🏗️ Compile
-        run: ./gradlew clean compileJava -x test --warning-mode all --info
+        run: ./gradlew clean compileJava -x test --warning-mode all --debug
   # ┌──────────────────────────────────────────────────────────────────────┐
   # │ STAGE 2 · PARALLEL FAST CHECKS (all depend on compile succeeding)      │
   # └──────────────────────────────────────────────────────────────────────┘
