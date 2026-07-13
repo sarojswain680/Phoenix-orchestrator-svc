@@ -109,7 +109,7 @@ protobuf {
         }
     }
     generateProtoTasks {
-        all().each { task ->
+        ofSourceSet('main').forEach { task ->
             task.plugins {
                 grpc {}
             }

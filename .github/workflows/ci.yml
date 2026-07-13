@@ -34,7 +34,7 @@ jobs:
     name: "PR Title Lint"
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: read
+      pull-requests: write
     steps:
       - name: ✅ Validate PR title (Conventional Commits)
         uses: amannn/action-semantic-pull-request@v5
@@ -98,8 +98,7 @@ jobs:
         with: { distribution: 'temurin', java-version: '21' }
       - uses: gradle/actions/setup-gradle@v4
       - name: 🏗️ Compile
-        run: ./gradlew clean compileJava -x test
-
+        run: ./gradlew clean compileJava -x test --warning-mode all
   # ┌──────────────────────────────────────────────────────────────────────┐
   # │ STAGE 2 · PARALLEL FAST CHECKS (all depend on compile succeeding)      │
   # └──────────────────────────────────────────────────────────────────────┘
