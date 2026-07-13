@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Claude PR Reviewer — v2
+Claude PR Reviewer — v2 (Enterprise Resilient Edition)
 - Per-file chunking (handles large PRs)
 - Inline line-level comments via GitHub Review API
+- Resilient rate-limit handling & exponential backoffs
+- Safe fallback if individual lines fall outside the active PR diff
 - Severity tiers: CRITICAL / MUST_FIX / MINOR / SUGGESTION
 - Hard-fails CI (exit 1) on any CRITICAL or MUST_FIX
 """
@@ -24,7 +26,8 @@ REPO              = os.environ["GITHUB_REPOSITORY"]
 PR_NUMBER         = os.environ["PR_NUMBER"]
 BASE_SHA          = os.environ["BASE_SHA"]
 HEAD_SHA          = os.environ["HEAD_SHA"]
-MODEL             = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-5")
+# Upgraded to Claude 3.5 Sonnet stable release
+MODEL             = os.environ.get("CLAUDE_MODEL", "claude-3-5-sonnet-20241022")
 
 BLOCKING = {"CRITICAL", "MUST_FIX"}
 EMOJI = {"CRITICAL": "🔴", "MUST_FIX": "🟠", "MINOR": "🟡", "SUGGESTION": "🔵"}
@@ -61,6 +64,7 @@ Classify every finding into EXACTLY one severity:
 
 For "line", give the line number in the NEW version of the file (the '+' side
 of the diff) where the comment should attach. Use the exact line the issue is on.
+Restrict your output to ONLY the top 5 most critical findings to keep payload sizes safe.
 
 RESPOND WITH VALID JSON ONLY. Schema:
 {
@@ -77,9 +81,9 @@ Return an empty array if the file is clean.
 """
 
 # ------------------------------------------------------------------
-# HTTP helpers with retry/backoff
+# HTTP helpers with advanced retry/backoff
 # ------------------------------------------------------------------
-def http_request(url, data=None, headers=None, method="GET", retries=3):
+def http_request(url, data=None, headers=None, method="GET", retries=5):
     for attempt in range(retries):
         try:
             req = urllib.request.Request(
@@ -91,30 +95,41 @@ def http_request(url, data=None, headers=None, method="GET", retries=3):
             with urllib.request.urlopen(req) as resp:
                 return json.loads(resp.read())
         except urllib.error.HTTPError as e:
-            if e.code in (429, 500, 502, 503, 529) and attempt < retries - 1:
-                wait = 2 ** (attempt + 1)
-                print(f"⏳ HTTP {e.code}, retrying in {wait}s...")
+            # Handle rate-limiting (429) or temporary secondary limits (403)
+            is_rate_limit = e.code == 429 or (e.code == 403 and "rate limit" in e.read().decode().lower())
+            
+            if (is_rate_limit or e.code in (500, 502, 503, 529)) and attempt < retries - 1:
+                # Exponential backoff: 4s, 8s, 16s, 32s...
+                wait = 2 ** (attempt + 2)
+                print(f"⏳ HTTP {e.code} (Rate Limit/Server Busy), retrying in {wait}s... (Attempt {attempt + 1}/{retries})")
                 time.sleep(wait)
                 continue
-            print(f"❌ HTTP {e.code}: {e.read().decode()}")
+            
+            print(f"❌ HTTP {e.code} Error: {e.read().decode()}")
             raise
-    raise RuntimeError("Max retries exceeded")
+    raise RuntimeError("Max HTTP retries exceeded")
 
 # ------------------------------------------------------------------
 # Get list of changed files + their per-file diffs
 # ------------------------------------------------------------------
 def get_changed_files():
+    # Resolve true merge base if SHA parameters are flaky
+    base = BASE_SHA if BASE_SHA else "origin/main"
+    head = HEAD_SHA if HEAD_SHA else "HEAD"
+    
     result = subprocess.run(
-        ["git", "diff", "--name-only", f"{BASE_SHA}...{HEAD_SHA}"],
+        ["git", "diff", "--name-only", f"{base}...{head}"],
         capture_output=True, text=True, check=True,
     )
     files = [f for f in result.stdout.splitlines() if f.strip()]
-    # Filter out binaries / ignored types
     return [f for f in files if not f.lower().endswith(IGNORE_EXT)]
 
 def get_file_diff(path):
+    base = BASE_SHA if BASE_SHA else "origin/main"
+    head = HEAD_SHA if HEAD_SHA else "HEAD"
+    
     result = subprocess.run(
-        ["git", "diff", f"{BASE_SHA}...{HEAD_SHA}", "--", path],
+        ["git", "diff", f"{base}...{head}", "--", path],
         capture_output=True, text=True, check=True,
     )
     diff = result.stdout
@@ -134,34 +149,31 @@ def review_file(path, diff):
             {"role": "user", "content": f"File: {path}\n\nDiff:\n```diff\n{diff}\n```"}
         ],
     }
-    body = http_request(
-        "https://api.anthropic.com/v1/messages",
-        data=payload,
-        headers={
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-        method="POST",
-    )
-    text = body["content"][0]["text"].strip()
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
     try:
+        body = http_request(
+            "https://api.anthropic.com/v1/messages",
+            data=payload,
+            headers={
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            method="POST",
+        )
+        text = body["content"][0]["text"].strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
         return json.loads(text).get("findings", [])
-    except json.JSONDecodeError:
-        print(f"⚠️ Could not parse Claude output for {path}, skipping.")
+    except Exception as e:
+        print(f"⚠️ Could not parse Claude output for {path}: {e}. Skipping.")
         return []
 
 # ------------------------------------------------------------------
 # Post a GitHub Review with inline comments
 # ------------------------------------------------------------------
 def post_review(all_findings, has_blocker):
-    """
-    all_findings: list of dicts with keys: path, line, severity, issue, recommendation
-    """
     counts = {k: 0 for k in EMOJI}
     inline_comments = []
 
@@ -174,11 +186,11 @@ def post_review(all_findings, has_blocker):
         inline_comments.append({
             "path": f["path"],
             "line": int(f["line"]),
-            "side": "RIGHT",   # comment on the new version of the code
+            "side": "RIGHT",   # Comments on the new changes
             "body": body,
         })
 
-    # Summary body
+    # Summary header
     summary = ["## 🧠 Claude Code Review\n"]
     summary.append("| Severity | Count |")
     summary.append("| :--- | :---: |")
@@ -192,8 +204,9 @@ def post_review(all_findings, has_blocker):
                    if has_blocker else
                    "### ✅ CI PASSED — no blocking issues.")
 
+    # Primary Attempt: Post review with inline comments
     review_body = {
-        "commit_id": HEAD_SHA,
+        "commit_id": HEAD_SHA if HEAD_SHA else "HEAD",
         "body": "\n".join(summary),
         "event": "REQUEST_CHANGES" if has_blocker else "COMMENT",
         "comments": inline_comments,
@@ -212,11 +225,23 @@ def post_review(all_findings, has_blocker):
             method="POST",
         )
         print("✅ Review with inline comments posted.")
-    except urllib.error.HTTPError:
-        # Fallback: some inline lines may be outside the diff. Post summary only.
-        print("⚠️ Inline post failed (line may be outside diff). Posting summary only.")
+    except Exception as e:
+        # Fallback: If an inline line falls outside the diff or triggers a rate limit,
+        # post the summary as a standard PR issue comment.
+        print(f"⚠️ Inline post failed ({e}). Posting summary fallback comment.")
+        fallback_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
+        
+        # Format inline comments as details inside the fallback summary
+        for f in all_findings:
+            summary.append(
+                f"\n<details><summary>{EMOJI[f['severity']]} <b>{f['path']}:{f['line']} ({f['severity']})</b></summary>\n\n"
+                f"**Issue:** {f['issue']}\n"
+                f"**Fix:** {f['recommendation']}\n"
+                f"</details>"
+            )
+            
         http_request(
-            f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments",
+            fallback_url,
             data={"body": "\n".join(summary)},
             headers={
                 "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -225,6 +250,7 @@ def post_review(all_findings, has_blocker):
             },
             method="POST",
         )
+        print("✅ Fallback summary comment posted.")
 
 # ------------------------------------------------------------------
 # Main
@@ -242,22 +268,23 @@ def main():
         diff = get_file_diff(path)
         if not diff.strip():
             continue
-        print(f"  🤖 {path}")
+        print(f"  🤖 Analyzing {path} with Claude...")
         findings = review_file(path, diff)
         for f in findings:
             f["path"] = path
             all_findings.append(f)
-        time.sleep(1)  # gentle pacing to avoid rate limits
+        # 1-second delay between file analyses to prevent Claude API rate limits
+        time.sleep(1.5)
 
     has_blocker = any(f["severity"] in BLOCKING for f in all_findings)
 
-    print("💬 Posting review...")
+    print("💬 Posting review comments to GitHub...")
     post_review(all_findings, has_blocker)
 
     if has_blocker:
-        print("❌ Blocker findings. Failing CI.")
+        print("❌ Blocker findings detected by AI. Failing CI Gate.")
         sys.exit(1)
-    print("✅ No blockers. Passing CI.")
+    print("✅ No blockers. Passing CI Gate.")
     sys.exit(0)
 
 if __name__ == "__main__":

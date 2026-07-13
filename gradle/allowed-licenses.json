@@ -1,0 +1,87 @@
+{
+  "allowedLicenses": [
+    {"moduleLicense": "Apache License, Version 2.0"},
+    {"moduleLicense": "Apache License 2.0"},
+    {"moduleLicense": "Apache License"},
+    {"moduleLicense": "The Apache License, Version 2.0"},
+    {"moduleLicense": "The Apache Software License, Version 2.0"},
+    {"moduleLicense": "Apache-2.0"},
+    {"moduleLicense": "Apache 2.0"},
+    {"moduleLicense": "Apache v2"},
+    {"moduleLicense": "Apache License, version 2.0"},
+    {"moduleLicense": "The Apache Software License, version 2.0"},
+    
+    {"moduleLicense": "MIT License"},
+    {"moduleLicense": "The MIT License"},
+    {"moduleLicense": "MIT"},
+    {"moduleLicense": "The MIT License (MIT)"},
+    {"moduleLicense": "MIT License (MIT)"},
+    {"moduleLicense": "Bouncy Castle Licence"},
+    {"moduleLicense": "MIT-0"},
+    
+    {"moduleLicense": "The 2-Clause BSD License"},
+    {"moduleLicense": "BSD-2-Clause"},
+    {"moduleLicense": "BSD"},
+    {"moduleLicense": "BSD License"},
+    {"moduleLicense": "BSD licence"},
+    {"moduleLicense": "BSD style"},
+    {"moduleLicense": "The BSD License"},
+    
+    {"moduleLicense": "The 3-Clause BSD License"},
+    {"moduleLicense": "3-Clause BSD License"},
+    {"moduleLicense": "BSD 3-Clause License"},
+    {"moduleLicense": "BSD License 2.0"},
+    {"moduleLicense": "Revised BSD"},
+    {"moduleLicense": "Revised BSD License"},
+    {"moduleLicense": "New BSD License"},
+    {"moduleLicense": "New BSD license"},
+    {"moduleLicense": "Modified BSD License"},
+    {"moduleLicense": "The BSD 3-Clause License"},
+    {"moduleLicense": "BSD 3-Clause \"New\" or \"Revised\" License (BSD-3-Clause)"},
+    {"moduleLicense": "BSD 3"},
+    {"moduleLicense": "BSD 3-clause New License"},
+    
+    {"moduleLicense": "Common Development and Distribution License 1.0"},
+    {"moduleLicense": "Common Development and Distribution License (CDDL), Version 1.1"},
+    {"moduleLicense": "CDDL"},
+    {"moduleLicense": "CDDL, v1.0"},
+    {"moduleLicense": "CDDL v1.1 / GPL v2 dual license"},
+    {"moduleLicense": "CDDL + GPLv2 with classpath exception"},
+    {"moduleLicense": "Dual license consisting of the CDDL v1.1 and GPL v2"},
+    
+    {"moduleLicense": "Common Public License Version 1.0"},
+    
+    {"moduleLicense": "Eclipse Distribution License - v 1.0"},
+    {"moduleLicense": "Eclipse Public License - Version 1.0"},
+    {"moduleLicense": "Eclipse Public License"},
+    {"moduleLicense": "Eclipse Public License 1.0"},
+    {"moduleLicense": "Eclipse Public License v1.0"},
+    {"moduleLicense": "Eclipse Public License - v 1.0"},
+    {"moduleLicense": "Eclipse Public License 2.0"},
+    {"moduleLicense": "Eclipse Public License v. 2.0"},
+    {"moduleLicense": "Eclipse Public License - v 2.0"},
+    {"moduleLicense": "EPL 2.0"},
+    {"moduleLicense": "Eclipse Public License v2.0"},
+    
+    {"moduleLicense": "Mozilla Public License"},
+    {"moduleLicense": "Mozilla Public License 1.1"},
+    {"moduleLicense": "Mozilla Public License Version 1.1"},
+    {"moduleLicense": "Mozilla Public License 1.1 (MPL 1.1)"},
+    {"moduleLicense": "MPL 1.1"},
+    
+    {"moduleLicense": "CC0"},
+    {"moduleLicense": "Public Domain, per Creative Commons CC0"},
+    {"moduleLicense": "Public Domain"},
+    {"moduleLicense": "PUBLIC DOMAIN"},
+    
+    {"moduleLicense": "Unicode/ICU License"},
+    {"moduleLicense": "UnRar License"},
+    {"moduleLicense": "Similar to Apache License but with the acknowledgment clause removed"},
+    
+    {"moduleLicense": "Go License"},
+    
+    {"moduleLicense": null, "moduleName": "com.google.guava:guava-parent"},
+    {"moduleLicense": null, "moduleName": "org.antlr:antlr4-runtime"},
+    {"moduleLicense": null, "moduleName": "org.threeten:threetenbp"}
+  ]
+}

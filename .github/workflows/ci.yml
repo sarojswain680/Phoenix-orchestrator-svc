@@ -14,7 +14,9 @@ permissions:
   contents: read
   security-events: write
   pull-requests: write
-  issues: write 
+  issues: write
+  checks: read
+  statuses: write
 # ==============================================================================
 # Reusable setup is repeated per job because GitHub jobs run on separate runners.
 # Gradle caching (setup-gradle) makes repeated setups cheap.
@@ -32,6 +34,8 @@ jobs:
     steps:
       - name: ✅ Validate PR title (Conventional Commits)
         uses: amannn/action-semantic-pull-request@v5
+        permissions:
+          pull-requests: read
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
