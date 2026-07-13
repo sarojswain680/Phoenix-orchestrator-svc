@@ -37,6 +37,9 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+      security-events: write
+      issues: write
+      checks: read
     steps:
       - name: ✅ Validate PR title (Conventional Commits)
         uses: amannn/action-semantic-pull-request@v6.1.1
@@ -99,8 +102,21 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: 'temurin', java-version: '21' }
       - uses: gradle/actions/setup-gradle@v4
-      - name: 🏗️ Compile
-        run: ./gradlew clean compileJava -x test --warning-mode all --debug
+      - name: 🏗️ Compile (detailed logs)
+        id: compile
+        run: |
+          set -o pipefail
+          ./gradlew clean compileJava -x test --warning-mode all --stacktrace --info 2>&1 | tee build/ci-compile.log
+        continue-on-error: true
+
+      - name: 📤 Upload compile logs (on failure)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-compile-logs
+          path: |
+            build/ci-compile.log
+            build/reports/problems/
   # ┌──────────────────────────────────────────────────────────────────────┐
   # │ STAGE 2 · PARALLEL FAST CHECKS (all depend on compile succeeding)      │
   # └──────────────────────────────────────────────────────────────────────┘
