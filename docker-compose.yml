@@ -1,23 +1,35 @@
 version: "3.8"
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: modernizer-postgres
     environment:
       POSTGRES_DB: modernizer
       POSTGRES_USER: modernizer
       POSTGRES_PASSWORD: modernizer
     ports: 
-    - "5433:5432" 
+    - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-modernizer}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     container_name: modernizer-redis
     ports:
-      - "6380:6379" 
+      - "6379:6379"
+
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3-management-alpine
     container_name: modernizer-rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
+
+volumes:
+  pgdata:

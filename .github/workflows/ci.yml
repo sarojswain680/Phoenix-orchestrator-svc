@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [ main ]
     types: [ opened, synchronize, reopened, edited ]
+  push:
+    branches: [ main ]
 
 # Cancel superseded runs on the same PR to save compute
 concurrency:
@@ -31,11 +33,11 @@ jobs:
   pr-title-lint:
     name: "PR Title Lint"
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     steps:
       - name: ✅ Validate PR title (Conventional Commits)
         uses: amannn/action-semantic-pull-request@v5
-        permissions:
-          pull-requests: read
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

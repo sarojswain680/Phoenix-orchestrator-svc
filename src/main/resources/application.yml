@@ -1,11 +1,22 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: orchestrator-service
+
+  # Enable virtual threads to process long AI streaming responses efficiently
+  threads:
+    virtual:
+      enabled: true
+
+  # Datastore Configuration
   datasource:
     url: jdbc:postgresql://localhost:5433/modernizer
     username: modernizer
     password: modernizer
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -13,17 +24,45 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
+
+  # Flyway Migration Schema
+  flyway:
+    enabled: true
+
+  # Temporary autoconfig exclusions for local compiling without services
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+
+  # In-memory Caching
   data:
     redis:
       host: localhost
       port: 6380
+
+  # Event broker
   rabbitmq:
     host: localhost
+
+  # Spring Boot 4.1 Native gRPC Client configuration
+  grpc:
+    client:
+      parser-sidecar:
+        address: static://localhost:50051
+        negotiation-type: plaintext
+
+  # ── Portable Spring AI 2.0 Configuration ──
   ai:
+    # Local Development AI Core (Ollama)
+    ollama:
+      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:deepseek-r1:8b}
+          temperature: 0.1  # Low temperature for strict, deterministic JSON parsing
+
+    # Production Cloud AI Core (Vertex AI / Gemini) - Kept as sibling
     vertex:
       ai:
         gemini:
@@ -33,28 +72,28 @@ spring:
             options:
               model: gemini-2.5-pro
               temperature: 0.1
-  flyway:
-    enabled: true
-grpc:
-  client:
-    parser-sidecar:
-      address: static://localhost:50051
-      negotiation-type: plaintext
 
+# Resilience Gates (Circuit Breaker & Retries)
 resilience4j:
   circuitbreaker:
     instances:
-      sidecar: { slidingWindowSize: 10, failureRateThreshold: 50 }
-      geminiAgent: { slidingWindowSize: 10, failureRateThreshold: 50 }
+      sidecar:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+      geminiAgent:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
   retry:
     instances:
-      sidecar: { maxAttempts: 3, waitDuration: 2s }
-      geminiAgent: { maxAttempts: 3, waitDuration: 2s }
+      sidecar:
+        maxAttempts: 3
+        waitDuration: 2s
+      geminiAgent:
+        maxAttempts: 3
+        waitDuration: 2s
 
+# External Object Storage
 storage:
   s3:
     endpoint: http://localhost:9000    # MinIO
     bucket: legacy-artifacts
-
-server:
-  port: 8080

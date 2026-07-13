@@ -22,6 +22,7 @@ configurations {
 }
 
 ext {
+    springAiVersion = '2.0.0' // Set to 2.0.0 for Spring Boot 4.1.0
     grpcVersion     = '1.66.0'
     protobufVersion = '3.25.1'
 }
@@ -45,6 +46,9 @@ dependencies {
 
     // ── Dependency Graph ──
     implementation 'org.jgrapht:jgrapht-core:1.5.2'
+
+    // ---- Spring AI (LOCAL Ollama — free & offline) ----
+    implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
 
     // ── gRPC ──
     implementation "io.grpc:grpc-protobuf:${grpcVersion}"
@@ -81,6 +85,12 @@ dependencies {
 
     // ── Spring AI (Gemini) — ADD BACK when needed & Boot-4-compatible version exists ──
     // implementation "org.springframework.ai:spring-ai-vertex-ai-gemini-spring-boot-starter"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 // ── JaCoCo (light coverage, no strict gate yet) ──
