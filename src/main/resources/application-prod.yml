@@ -1,0 +1,15 @@
+# Production overrides. Activate with SPRING_PROFILES_ACTIVE=prod
+# All values MUST come from a secret manager (Vault / GCP Secret Manager / K8s secrets).
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate   # NEVER auto-modify prod schema
+  grpc:
+    client:
+      parser-sidecar:
+        # mTLS required in prod — inject certs via secret manager / mounted volume.
+        negotiation-type: tls
+        # tls:
+        #   trust-cert-collection: file:${GRPC_TLS_TRUST_CERT}
+        #   client-cert-chain: file:${GRPC_TLS_CLIENT_CERT}
+        #   client-private-key: file:${GRPC_TLS_CLIENT_KEY}
