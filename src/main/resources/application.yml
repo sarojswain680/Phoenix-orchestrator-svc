@@ -10,22 +10,24 @@ spring:
     virtual:
       enabled: true
 
-  # Datastore Configuration
+  # Datastore Configuration — all secrets externalized via env vars
   datasource:
-    url: jdbc:postgresql://localhost:5433/modernizer
-    username: modernizer
-    password: modernizer
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:modernizer}
+    username: ${POSTGRES_USER:modernizer}
+    password: ${POSTGRES_PASSWORD:modernizer}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      # SAFE default. NEVER create-drop outside the 'test' profile (data loss).
+      # Schema is owned by Flyway migrations.
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
 
-  # Flyway Migration Schema
+  # Flyway owns all schema changes (versioned, auditable)
   flyway:
     enabled: true
 
@@ -35,26 +37,30 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
-  # In-memory Caching
+  # Warm-tier cache (Redis) — externalized
   data:
     redis:
-      host: localhost
-      port: 6380
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
-  # Event broker
+  # Event broker (RabbitMQ) — externalized
   rabbitmq:
-    host: localhost
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
 
   # Spring Boot 4.1 Native gRPC Client configuration
   grpc:
     client:
       parser-sidecar:
-        address: static://localhost:50051
+        address: static://${GRPC_SIDECAR_HOST:localhost}:${GRPC_SIDECAR_PORT:50051}
+        # plaintext for LOCAL dev only. Production overrides to 'tls' (see application-prod.yml)
         negotiation-type: plaintext
 
   # ── Portable Spring AI 2.0 Configuration ──
   ai:
-    # Local Development AI Core (Ollama)
     ollama:
       base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
       chat:
@@ -92,8 +98,10 @@ resilience4j:
         maxAttempts: 3
         waitDuration: 2s
 
-# External Object Storage
+# External Object Storage (S3 / MinIO) — externalized
 storage:
   s3:
-    endpoint: http://localhost:9000    # MinIO
-    bucket: legacy-artifacts
+    endpoint: ${STORAGE_S3_ENDPOINT:http://localhost:9000}
+    bucket: ${STORAGE_S3_BUCKET:legacy-artifacts}
+    access-key: ${STORAGE_S3_ACCESS_KEY:}
+    secret-key: ${STORAGE_S3_SECRET_KEY:}

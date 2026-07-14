@@ -174,15 +174,18 @@ def review_file(path, diff):
 # Post a GitHub Review with inline comments
 # ------------------------------------------------------------------
 def post_review(all_findings, has_blocker):
-    counts = {k: 0 for k in EMOJI}
+    # Compute all severity counts ONCE, up front (fixes counts-dict bug).
+    counts = {
+        sev: sum(1 for f in all_findings if f["severity"] == sev)
+        for sev in EMOJI
+    }
 
     # Summary header
     summary = ["## 🧠 Claude Code Review\n"]
     summary.append("| Severity | Count |")
     summary.append("| :--- | :---: |")
     for sev in ["CRITICAL", "MUST_FIX", "MINOR", "SUGGESTION"]:
-        count = sum(1 for f in all_findings if f["severity"] == sev)
-        summary.append(f"| {EMOJI[sev]} {sev} | {count} |")
+        summary.append(f"| {EMOJI[sev]} {sev} | {counts[sev]} |")
     summary.append("")
 
     if not all_findings:
@@ -191,7 +194,6 @@ def post_review(all_findings, has_blocker):
         summary.append("### 📝 Findings:\n")
         for f in all_findings:
             sev = f["severity"]
-            counts[sev] = counts.get(sev, 0) + 1
             summary.append(
                 f"\n<details><summary>{EMOJI[sev]} <b>{f['path']}:{f['line']} ({sev})</b></summary>\n\n"
                 f"**Issue:** {f['issue']}\n\n"
@@ -204,7 +206,6 @@ def post_review(all_findings, has_blocker):
                    if has_blocker else
                    "### ✅ CI PASSED — no blocking issues.")
 
-    # Post as simple issue comment (works with fork PRs)
     comment_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
     try:
         http_request(
@@ -220,7 +221,7 @@ def post_review(all_findings, has_blocker):
         print("✅ Review comment posted successfully.")
     except Exception as e:
         print(f"❌ Failed to post review: {e}")
-        raise
+        sys.exit(1)   # explicit non-zero exit so CI reliably detects failure
 
 # ------------------------------------------------------------------
 # Main
