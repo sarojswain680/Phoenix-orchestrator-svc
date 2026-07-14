@@ -12,7 +12,7 @@ RUN apk add --no-cache \
     protobuf-dev
 
 # Download and install protoc-gen-grpc-java plugin
-RUN GRPC_VERSION="1.56.0" && \
+RUN GRPC_VERSION="1.66.0" && \
     curl -L https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/${GRPC_VERSION}/protoc-gen-grpc-java-${GRPC_VERSION}-linux-x86_64.exe \
     -o /usr/local/bin/protoc-gen-grpc-java && \
     chmod +x /usr/local/bin/protoc-gen-grpc-java

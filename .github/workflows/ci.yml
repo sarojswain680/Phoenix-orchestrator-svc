@@ -108,7 +108,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build
-          ./gradlew clean compileJava -x test --warning-mode all --stacktrace --info --scan 2>&1 | tee build/ci-compile.log
+          ./gradlew clean compileJava -x test --warning-mode all --stacktrace --debug --scan 2>&1 | tee build/ci-compile.log
         continue-on-error: true
 
       - name: 📤 Upload compile logs (on failure)

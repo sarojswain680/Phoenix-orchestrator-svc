@@ -35,7 +35,7 @@ ext {
 
 repositories {
     mavenCentral()
-    maven { url 'https://repo.spring.io/milestone' }
+    maven { url = 'https://repo.spring.io/milestone' }
 }
 
 dependencies {
@@ -116,7 +116,7 @@ protobuf {
         }
     }
     generateProtoTasks {
-        ofSourceSet('main').forEach { task ->
+        all().each { task ->
             task.plugins {
                 grpc {}
             }
