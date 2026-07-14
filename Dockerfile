@@ -7,7 +7,17 @@ RUN apk add --no-cache \
     curl \
     unzip \
     libstdc++ \
-    libgcc
+    libgcc \
+    protobuf \
+    protobuf-dev
+
+# Download and install protoc-gen-grpc-java plugin
+RUN GRPC_VERSION="1.56.0" && \
+    curl -L https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/${GRPC_VERSION}/protoc-gen-grpc-java-${GRPC_VERSION}-linux-x86_64.exe \
+    -o /usr/local/bin/protoc-gen-grpc-java && \
+    chmod +x /usr/local/bin/protoc-gen-grpc-java
+
+
 COPY . .
 # Ensure Gradle cache is properly initialized and grant execute permissions
 RUN chmod +x ./gradlew && \

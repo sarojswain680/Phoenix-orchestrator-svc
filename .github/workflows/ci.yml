@@ -108,7 +108,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build
-          ./gradlew clean compileJava -x test --warning-mode all --stacktrace --info 2>&1 | tee build/ci-compile.log
+          ./gradlew clean compileJava -x test --warning-mode all --stacktrace --info --scan 2>&1 | tee build/ci-compile.log
         continue-on-error: true
 
       - name: 📤 Upload compile logs (on failure)
@@ -169,7 +169,7 @@ jobs:
       - name: 🐛 SpotBugs
         run: ./gradlew spotbugsMain
       - name: 📤 Upload SARIF
-        if: always()
+        if: always() && hashFiles('build/reports/spotbugs/main.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: build/reports/spotbugs/main.sarif
