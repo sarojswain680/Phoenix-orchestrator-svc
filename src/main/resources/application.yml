@@ -2,44 +2,51 @@ spring:
   application:
     name: orchestrator-service
   datasource:
-    url: jdbc:postgresql://localhost:5433/modernizer
-    username: modernizer
-    password: modernizer
+    # Use environment variables to support both container networks and external config injections safely
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/modernizer}
+    username: ${SPRING_DATASOURCE_USERNAME:modernizer}
+    password: ${SPRING_DATASOURCE_PASSWORD:modernizer}
     driver-class-name: org.postgresql.Driver
   jpa:
+    show-sql: false # Set to false in production for optimal performance
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate # Use 'validate' or 'none' since Flyway migrations are active
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+
+  # Removed Redis/Rabbit autoconfigure exclusions to allow default dependency injection.
+  # Adjust as needed if utilizing custom infrastructure configurations.
   data:
     redis:
-      host: localhost
-      port: 6380
+      host: ${SPRING_REDIS_HOST:redis}
+      port: ${SPRING_REDIS_PORT:6379}
   rabbitmq:
-    host: localhost
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+
+  # ── Spring AI 2.x / Google GenAI configuration ──
   ai:
-    vertex:
-      ai:
-        gemini:
-          project-id: ${GCP_PROJECT:dummy}
-          location: us-central1
-          chat:
-            options:
-              model: gemini-2.5-pro
-              temperature: 0.1
+    google:
+      genai:
+        project-id: ${GCP_PROJECT:dummy}
+        location: us-central1
+        chat:
+          model: gemini-2.5-pro
+          temperature: 0.1
   flyway:
     enabled: true
-grpc:
-  client:
-    parser-sidecar:
-      address: static://localhost:50051
-      negotiation-type: plaintext
+
+  # ── Native Spring Boot 4.1.x gRPC Client properties (Correctly Nested) ──
+  grpc:
+    client:
+      channel:
+        parser-sidecar:
+          target: ${PARSER_SIDECAR_GRPC_TARGET:static://localhost:50051}
+
+# Controls detailed execution logs through the standard framework rather than STDOUT
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
 
 resilience4j:
   circuitbreaker:
@@ -53,8 +60,21 @@ resilience4j:
 
 storage:
   s3:
-    endpoint: http://localhost:9000    # MinIO
-    bucket: legacy-artifacts
+    endpoint: ${S3_ENDPOINT:http://minio:9000} # Aligned with docker-compose service name
+    bucket: ${S3_BUCKET:legacy-artifacts}
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers,threaddump,heapdump
+  endpoint:
+    health:
+      show-details: when-authorized
+  simple:
+    metrics:
+      export:
+        enabled: true

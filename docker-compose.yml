@@ -8,16 +8,41 @@ services:
       POSTGRES_USER: modernizer
       POSTGRES_PASSWORD: modernizer
     ports: 
-    - "5433:5432" 
+    - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
+# ---redis cache
   redis:
     image: redis:7
     container_name: modernizer-redis
     ports:
-      - "6380:6379" 
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
   rabbitmq:
     image: rabbitmq:3-management
     container_name: modernizer-rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
+  # ── Added MinIO Service for Local S3 Compatibility ──
+
+  minio:
+    image: minio/minio:latest
+    container_name: modernizer-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+# ── Declared root volumes (Corrected - Resolves Startup Crash) ──
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
