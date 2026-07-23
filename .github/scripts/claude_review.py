@@ -174,21 +174,11 @@ def review_file(path, diff):
 # Post a GitHub Review with inline comments
 # ------------------------------------------------------------------
 def post_review(all_findings, has_blocker):
-    counts = {k: 0 for k in EMOJI}
-    inline_comments = []
-
-    for f in all_findings:
-        sev = f["severity"]
-        counts[sev] = counts.get(sev, 0) + 1
-        body = (f"{EMOJI[sev]} **{sev}**\n\n"
-                f"**Issue:** {f['issue']}\n\n"
-                f"**Fix:** {f['recommendation']}")
-        inline_comments.append({
-            "path": f["path"],
-            "line": int(f["line"]),
-            "side": "RIGHT",   # Comments on the new changes
-            "body": body,
-        })
+    # Compute all severity counts ONCE, up front (fixes counts-dict bug).
+    counts = {
+        sev: sum(1 for f in all_findings if f["severity"] == sev)
+        for sev in EMOJI
+    }
 
     # Summary header
     summary = ["## 🧠 Claude Code Review\n"]
@@ -197,51 +187,29 @@ def post_review(all_findings, has_blocker):
     for sev in ["CRITICAL", "MUST_FIX", "MINOR", "SUGGESTION"]:
         summary.append(f"| {EMOJI[sev]} {sev} | {counts[sev]} |")
     summary.append("")
+
     if not all_findings:
         summary.append("✅ **No issues found. Great work!**")
+    else:
+        summary.append("### 📝 Findings:\n")
+        for f in all_findings:
+            sev = f["severity"]
+            summary.append(
+                f"\n<details><summary>{EMOJI[sev]} <b>{f['path']}:{f['line']} ({sev})</b></summary>\n\n"
+                f"**Issue:** {f['issue']}\n\n"
+                f"**Fix:** {f['recommendation']}\n"
+                f"</details>"
+            )
+
     summary.append("\n---")
     summary.append("### ❌ CI BLOCKED — resolve CRITICAL / MUST_FIX before merge."
                    if has_blocker else
                    "### ✅ CI PASSED — no blocking issues.")
 
-    # Primary Attempt: Post review with inline comments
-    review_body = {
-        "commit_id": HEAD_SHA if HEAD_SHA else "HEAD",
-        "body": "\n".join(summary),
-        "event": "REQUEST_CHANGES" if has_blocker else "COMMENT",
-        "comments": inline_comments,
-    }
-
-    url = f"https://api.github.com/repos/{REPO}/pulls/{PR_NUMBER}/reviews"
+    comment_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
     try:
         http_request(
-            url,
-            data=review_body,
-            headers={
-                "Authorization": f"Bearer {GITHUB_TOKEN}",
-                "Accept": "application/vnd.github+json",
-                "content-type": "application/json",
-            },
-            method="POST",
-        )
-        print("✅ Review with inline comments posted.")
-    except Exception as e:
-        # Fallback: If an inline line falls outside the diff or triggers a rate limit,
-        # post the summary as a standard PR issue comment.
-        print(f"⚠️ Inline post failed ({e}). Posting summary fallback comment.")
-        fallback_url = f"https://api.github.com/repos/{REPO}/issues/{PR_NUMBER}/comments"
-        
-        # Format inline comments as details inside the fallback summary
-        for f in all_findings:
-            summary.append(
-                f"\n<details><summary>{EMOJI[f['severity']]} <b>{f['path']}:{f['line']} ({f['severity']})</b></summary>\n\n"
-                f"**Issue:** {f['issue']}\n"
-                f"**Fix:** {f['recommendation']}\n"
-                f"</details>"
-            )
-            
-        http_request(
-            fallback_url,
+            comment_url,
             data={"body": "\n".join(summary)},
             headers={
                 "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -250,7 +218,10 @@ def post_review(all_findings, has_blocker):
             },
             method="POST",
         )
-        print("✅ Fallback summary comment posted.")
+        print("✅ Review comment posted successfully.")
+    except Exception as e:
+        print(f"❌ Failed to post review: {e}")
+        sys.exit(1)   # explicit non-zero exit so CI reliably detects failure
 
 # ------------------------------------------------------------------
 # Main
