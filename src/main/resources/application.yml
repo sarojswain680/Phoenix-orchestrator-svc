@@ -12,72 +12,52 @@ spring:
 
   # Datastore Configuration — all secrets externalized via env vars
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:modernizer}
-    username: ${POSTGRES_USER:modernizer}
-    password: ${POSTGRES_PASSWORD:modernizer}
+    # Use environment variables to support both container networks and external config injections safely
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/modernizer}
+    username: ${SPRING_DATASOURCE_USERNAME:modernizer}
+    password: ${SPRING_DATASOURCE_PASSWORD:modernizer}
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    show-sql: false # Set to false in production for optimal performance
     hibernate:
-      # SAFE default. NEVER create-drop outside the 'test' profile (data loss).
-      # Schema is owned by Flyway migrations.
-      ddl-auto: validate
+      ddl-auto: validate # Use 'validate' or 'none' since Flyway migrations are active
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: false
 
-  # Flyway owns all schema changes (versioned, auditable)
+  # Removed Redis/Rabbit autoconfigure exclusions to allow default dependency injection.
+  # Adjust as needed if utilizing custom infrastructure configurations.
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:redis}
+      port: ${SPRING_REDIS_PORT:6379}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+
+  # ── Spring AI 2.x / Google GenAI configuration ──
+  ai:
+    google:
+      genai:
+        project-id: ${GCP_PROJECT:dummy}
+        location: us-central1
+        chat:
+          model: gemini-2.5-pro
+          temperature: 0.1
   flyway:
     enabled: true
 
-  # Temporary autoconfig exclusions for local compiling without services
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
-
-  # Warm-tier cache (Redis) — externalized
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-
-  # Event broker (RabbitMQ) — externalized
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
-
-  # Spring Boot 4.1 Native gRPC Client configuration
+  # ── Native Spring Boot 4.1.x gRPC Client properties (Correctly Nested) ──
   grpc:
     client:
-      parser-sidecar:
-        address: static://${GRPC_SIDECAR_HOST:localhost}:${GRPC_SIDECAR_PORT:50051}
-        # plaintext for LOCAL dev only. Production overrides to 'tls' (see application-prod.yml)
-        negotiation-type: plaintext
+      channel:
+        parser-sidecar:
+          target: ${PARSER_SIDECAR_GRPC_TARGET:static://localhost:50051}
 
-  # ── Portable Spring AI 2.0 Configuration ──
-  ai:
-    ollama:
-      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
-      chat:
-        options:
-          model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:deepseek-r1:8b}
-          temperature: 0.1  # Low temperature for strict, deterministic JSON parsing
-
-    # Production Cloud AI Core (Vertex AI / Gemini) - Kept as sibling
-    vertex:
-      ai:
-        gemini:
-          project-id: ${GCP_PROJECT:dummy}
-          location: us-central1
-          chat:
-            options:
-              model: gemini-2.5-pro
-              temperature: 0.1
+# Controls detailed execution logs through the standard framework rather than STDOUT
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
 
 # Resilience Gates (Circuit Breaker & Retries)
 resilience4j:
@@ -101,7 +81,21 @@ resilience4j:
 # External Object Storage (S3 / MinIO) — externalized
 storage:
   s3:
-    endpoint: ${STORAGE_S3_ENDPOINT:http://localhost:9000}
-    bucket: ${STORAGE_S3_BUCKET:legacy-artifacts}
-    access-key: ${STORAGE_S3_ACCESS_KEY:}
-    secret-key: ${STORAGE_S3_SECRET_KEY:}
+    endpoint: ${S3_ENDPOINT:http://minio:9000} # Aligned with docker-compose service name
+    bucket: ${S3_BUCKET:legacy-artifacts}
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers,threaddump,heapdump
+  endpoint:
+    health:
+      show-details: when-authorized
+  simple:
+    metrics:
+      export:
+        enabled: true
