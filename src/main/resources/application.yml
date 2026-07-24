@@ -1,12 +1,23 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: orchestrator-service
+
+  # Enable virtual threads to process long AI streaming responses efficiently
+  threads:
+    virtual:
+      enabled: true
+
+  # Datastore Configuration — all secrets externalized via env vars
   datasource:
     # Use environment variables to support both container networks and external config injections safely
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/modernizer}
     username: ${SPRING_DATASOURCE_USERNAME:modernizer}
     password: ${SPRING_DATASOURCE_PASSWORD:modernizer}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     show-sql: false # Set to false in production for optimal performance
     hibernate:
@@ -48,16 +59,26 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
 
+# Resilience Gates (Circuit Breaker & Retries)
 resilience4j:
   circuitbreaker:
     instances:
-      sidecar: { slidingWindowSize: 10, failureRateThreshold: 50 }
-      geminiAgent: { slidingWindowSize: 10, failureRateThreshold: 50 }
+      sidecar:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+      geminiAgent:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
   retry:
     instances:
-      sidecar: { maxAttempts: 3, waitDuration: 2s }
-      geminiAgent: { maxAttempts: 3, waitDuration: 2s }
+      sidecar:
+        maxAttempts: 3
+        waitDuration: 2s
+      geminiAgent:
+        maxAttempts: 3
+        waitDuration: 2s
 
+# External Object Storage (S3 / MinIO) — externalized
 storage:
   s3:
     endpoint: ${S3_ENDPOINT:http://minio:9000} # Aligned with docker-compose service name

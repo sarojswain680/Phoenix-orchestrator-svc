@@ -108,3 +108,10 @@ src/main/resources/application-local.yml
 # Spring Boot
 ######################
 spring-boot-*.jar
+
+# ── Secrets — never commit ──
+.env
+*.pem
+*.private-key.pem
+secrets/
+.secrets/
