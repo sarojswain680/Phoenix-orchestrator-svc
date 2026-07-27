@@ -84,8 +84,6 @@ storage:
     endpoint: ${S3_ENDPOINT:http://minio:9000} # Aligned with docker-compose service name
     bucket: ${S3_BUCKET:legacy-artifacts}
 
-server:
-  port: 8080
 
 management:
   endpoints:
