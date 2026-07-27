@@ -4,7 +4,7 @@ services:
     image: postgres:16-alpine
     container_name: modernizer-postgres
     environment:
-      POSTGRES_DB: modernizer
+      POSTGRES_DB: ${POSTGRES_DB:modernizer}
       POSTGRES_USER: modernizer
       POSTGRES_PASSWORD: modernizer
     ports: 
