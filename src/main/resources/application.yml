@@ -44,6 +44,7 @@ spring:
         chat:
           model: gemini-2.5-pro
           temperature: 0.1
+
   flyway:
     enabled: true
 
@@ -53,6 +54,15 @@ spring:
       channel:
         parser-sidecar:
           target: ${PARSER_SIDECAR_GRPC_TARGET:static://localhost:50051}
+
+# ── GitHub App auth (PR1) — secrets externalized ──
+# NOTE: top-level key (NOT under spring:). Binds to @ConfigurationProperties(prefix = "github.app").
+github:
+  app:
+    id: ${GITHUB_APP_ID:}
+    installation-id: ${GITHUB_APP_INSTALLATION_ID:}
+    private-key-path: ${GITHUB_APP_PRIVATE_KEY_PATH:}
+    api-base-url: ${GITHUB_API_BASE_URL:https://api.github.com}
 
 # Controls detailed execution logs through the standard framework rather than STDOUT
 logging:
@@ -83,7 +93,6 @@ storage:
   s3:
     endpoint: ${S3_ENDPOINT:http://minio:9000} # Aligned with docker-compose service name
     bucket: ${S3_BUCKET:legacy-artifacts}
-
 
 management:
   endpoints:
