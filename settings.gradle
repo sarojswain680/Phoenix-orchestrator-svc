@@ -6,8 +6,8 @@ pluginManagement {
 }
 
 plugins {
-    // Enables Spring Boot's standard toolchain resolution
-    id "org.gradle.toolchains.foojay-resolver-convention" version "0.8.0"
+    // Updated to version 1.0.0 to support Gradle 9+ and resolve the IBM_SEMERU issue
+    id "org.gradle.toolchains.foojay-resolver-convention" version "1.0.0"
 }
 
 rootProject.name = 'orchestrator-service'
