@@ -38,6 +38,7 @@ public class PipelineOrchestrator {
       log.error("Job {} failed", jobId, e);
       jobStatus.markFailed(jobId, e.getMessage());
     } finally {
+      log.info("Job {} Cleanup", jobId);
       // TODO: cleanup workspace
     }
   }

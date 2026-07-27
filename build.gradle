@@ -25,6 +25,14 @@ java {
     }
 }
 
+test {
+    useJUnitPlatform {
+        if (!project.hasProperty('includeTags')) {
+            excludeTags 'it'
+        }
+    }
+}
+
 // ── Spotless ──
 spotless {
     java {
@@ -226,6 +234,12 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     testRuntimeOnly 'com.h2database:h2'
+
+    // ── Git ──
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
+
+    // ── GitHub App auth (JWT → installation token) ──  [PR1]
+    implementation 'com.auth0:java-jwt:4.4.0'
 
     // ── Spring AI (Gemini) — ADD BACK when needed & Boot-4-compatible version exists ──
     // implementation "org.springframework.ai:spring-ai-vertex-ai-gemini-spring-boot-starter"
