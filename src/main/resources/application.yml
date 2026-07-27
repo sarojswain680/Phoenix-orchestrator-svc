@@ -12,10 +12,10 @@ spring:
 
   # Datastore Configuration — all secrets externalized via env vars
   datasource:
-    # Use environment variables to support both container networks and external config injections safely
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/modernizer}
-    username: ${SPRING_DATASOURCE_USERNAME:modernizer}
-    password: ${SPRING_DATASOURCE_PASSWORD:modernizer}
+    # Falls back to local host (port 5433) and matches credentials in your .env
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:modernizer}}
+    username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:modernizer}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:modernizer_postgres_pass}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -26,14 +26,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # Removed Redis/Rabbit autoconfigure exclusions to allow default dependency injection.
-  # Adjust as needed if utilizing custom infrastructure configurations.
+  # Synced Redis with local mapped host (port 6380) and auth configs
   data:
     redis:
-      host: ${SPRING_REDIS_HOST:redis}
-      port: ${SPRING_REDIS_PORT:6379}
+      host: ${SPRING_REDIS_HOST:${REDIS_HOST:localhost}}
+      port: ${SPRING_REDIS_PORT:${REDIS_PORT:6380}}
+      password: ${SPRING_REDIS_PASSWORD:${REDIS_PASSWORD:}}
+
+  # Synced RabbitMQ with credentials established in your .env
   rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    host: ${SPRING_RABBITMQ_HOST:${RABBITMQ_HOST:localhost}}
+    port: ${SPRING_RABBITMQ_PORT:${RABBITMQ_PORT:5672}}
+    username: ${SPRING_RABBITMQ_USERNAME:${RABBITMQ_USER:modernizer_rabbit}}
+    password: ${SPRING_RABBITMQ_PASSWORD:${RABBITMQ_PASSWORD:super_secret_rabbit_pass}}
 
   # ── Spring AI 2.x / Google GenAI configuration ──
   ai:
@@ -78,12 +83,13 @@ resilience4j:
         maxAttempts: 3
         waitDuration: 2s
 
-# External Object Storage (S3 / MinIO) — externalized
+# External Object Storage (S3 / MinIO) — aligned with credentials in your .env
 storage:
   s3:
-    endpoint: ${S3_ENDPOINT:http://minio:9000} # Aligned with docker-compose service name
-    bucket: ${S3_BUCKET:legacy-artifacts}
-
+    endpoint: ${S3_ENDPOINT:${STORAGE_S3_ENDPOINT:http://localhost:9000}}
+    bucket: ${S3_BUCKET:${STORAGE_S3_BUCKET:legacy-artifacts}}
+    access-key: ${S3_ACCESS_KEY:${STORAGE_S3_ACCESS_KEY:minioadmin}}
+    secret-key: ${S3_SECRET_KEY:${STORAGE_S3_SECRET_KEY:minioadmin}}
 
 management:
   endpoints:
