@@ -20,13 +20,25 @@ public class LlmOrchestrator {
 
   public String routeChat(String provider, String bodyJson)
       throws IOException, InterruptedException {
-    LlmService service = clients.get(provider.toLowerCase());
+
+    String activeProvider = provider;
+
+    // Auto-detect: If no provider was explicitly passed, use the first configured one
+    if (activeProvider == null || activeProvider.isBlank()) {
+      if (clients.isEmpty()) {
+        throw new IllegalStateException(
+            "No active LLM providers are configured in your .env file!");
+      }
+      activeProvider = clients.keySet().iterator().next();
+    }
+
+    LlmService service = clients.get(activeProvider.toLowerCase());
     if (service == null) {
       throw new IllegalArgumentException(
           "Provider '"
-              + provider
-              + "' is not supported or not configured. "
-              + "Available providers: "
+              + activeProvider
+              + "' is not supported or not active. "
+              + "Available active providers: "
               + clients.keySet());
     }
     return service.chatCompletions(bodyJson);

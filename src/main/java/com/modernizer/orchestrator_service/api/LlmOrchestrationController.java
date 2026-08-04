@@ -24,21 +24,40 @@ public class LlmOrchestrationController {
   }
 
   /**
-   * Accepts the LLM provider in the query params and routes the raw JSON body to the orchestrator.
+   * Accepts optional provider query param and either a raw prompt string OR a raw JSON payload.
    *
-   * <p>URL: POST /api/v1/chat?provider=openai
+   * <p>URL: POST /api/v1/chat (completely implicit)
+   *
+   * <p>URL: POST /api/v1/chat?provider=openai (explicit routing)
    */
   @PostMapping("/chat")
   public ResponseEntity<String> chat(
-      @RequestParam(defaultValue = "openai") String provider, @RequestBody String bodyJson)
+      @RequestParam(required = false) String provider, @RequestBody String body)
       throws IOException, InterruptedException {
 
-    if (bodyJson == null || bodyJson.isBlank()) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Request body (OpenAI-compatible payload) cannot be empty.");
+    if (body == null || body.isBlank()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Request body cannot be empty.");
     }
 
-    String responseContent = orchestrator.routeChat(provider, bodyJson);
+    String formattedPayload = body.trim();
+
+    // Auto-Framing: If the input is plain text and NOT a JSON block, wrap it in OpenAI format
+    if (!formattedPayload.startsWith("{")) {
+      formattedPayload =
+          """
+          {
+            "messages": [
+              {
+                "role": "user",
+                "content": "%s"
+              }
+            ]
+          }
+          """
+              .formatted(formattedPayload.replace("\"", "\\\"").replace("\n", "\\n"));
+    }
+
+    String responseContent = orchestrator.routeChat(provider, formattedPayload);
     return ResponseEntity.ok(responseContent);
   }
 

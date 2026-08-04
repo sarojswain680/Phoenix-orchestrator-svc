@@ -182,10 +182,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0'
     // ── Spring AI Starters (Spring AI 2.0.0) ──
-    
-    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
-    // Unified Anthropic Starter (Powers Claude models)
-    implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
 
     // ── Spring AI (Gemini via Vertex AI) ──
     // Unified Google GenAI Starter (Replaces the legacy Vertex AI Gemini starter)
