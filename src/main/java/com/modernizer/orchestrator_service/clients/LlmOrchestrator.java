@@ -11,7 +11,7 @@ public class LlmOrchestrator {
   private final Map<String, LlmService> clients;
 
   public LlmOrchestrator(List<LlmService> services) {
-    // ONLY register clients that actually have a non-empty API key in .env
+    // Only register clients that actually have a valid API key configured
     this.clients =
         services.stream()
             .filter(LlmService::isActive)
@@ -25,7 +25,7 @@ public class LlmOrchestrator {
 
     String activeProvider = provider;
 
-    // Auto-detect: Pick the first actually active client registered
+    // Auto-detect: Pick the first active client registered from your .env
     if (activeProvider == null || activeProvider.isBlank()) {
       if (clients.isEmpty()) {
         throw new IllegalStateException(

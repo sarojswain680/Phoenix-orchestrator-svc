@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 @ConditionalOnProperty(prefix = "external.claude", name = "api-key")
 public class ClaudeClient implements LlmService {
+
   private final HttpClient httpClient;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final String apiKey;
@@ -24,10 +25,13 @@ public class ClaudeClient implements LlmService {
   public ClaudeClient(
       HttpClient httpClient,
       @Value("${external.claude.api-key}") String apiKey,
-      @Value("${external.claude.base-url:https://api.anthropic.com}") String baseUrl) {
+      @Value("${external.claude.base-url}") String baseUrl) {
     this.httpClient = httpClient;
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl;
+    this.baseUrl =
+        baseUrl != null && baseUrl.endsWith("/")
+            ? baseUrl.substring(0, baseUrl.length() - 1)
+            : baseUrl;
   }
 
   @Override
@@ -61,22 +65,30 @@ public class ClaudeClient implements LlmService {
     JsonNode root = objectMapper.readTree(openAiJson);
     ObjectNode claudeRoot = objectMapper.createObjectNode();
 
+    // Map model and completion constraints safely
     claudeRoot.put("model", root.path("model").asText("claude-3-5-sonnet-latest"));
     claudeRoot.put("max_tokens", root.path("max_tokens").asInt(4096));
 
-    if (root.has("temperature")) claudeRoot.set("temperature", root.get("temperature"));
-    if (root.has("top_p")) claudeRoot.set("top_p", root.get("top_p"));
+    if (root.has("temperature")) {
+      claudeRoot.set("temperature", root.get("temperature"));
+    }
+    if (root.has("top_p")) {
+      claudeRoot.set("top_p", root.get("top_p"));
+    }
 
     ArrayNode openAiMessages = (ArrayNode) root.path("messages");
     ArrayNode claudeMessages = objectMapper.createArrayNode();
     StringBuilder systemPrompt = new StringBuilder();
 
+    // Map system prompts to the top level, and clean user/assistant structures
     for (JsonNode msg : openAiMessages) {
       String role = msg.path("role").asText();
       String content = msg.path("content").asText();
 
-      if ("system".equalsIgnoreCase(role)) {
-        if (!systemPrompt.isEmpty()) systemPrompt.append("\n");
+      if ("system".equalsIgnoreCase(role) || "developer".equalsIgnoreCase(role)) {
+        if (!systemPrompt.isEmpty()) {
+          systemPrompt.append("\n");
+        }
         systemPrompt.append(content);
       } else {
         ObjectNode claudeMsg = objectMapper.createObjectNode();
@@ -90,6 +102,7 @@ public class ClaudeClient implements LlmService {
       claudeRoot.put("system", systemPrompt.toString());
     }
     claudeRoot.set("messages", claudeMessages);
+
     return objectMapper.writeValueAsString(claudeRoot);
   }
 

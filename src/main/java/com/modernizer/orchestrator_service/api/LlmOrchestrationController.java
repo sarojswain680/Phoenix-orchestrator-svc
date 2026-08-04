@@ -1,5 +1,8 @@
 package com.modernizer.orchestrator_service.api;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.modernizer.orchestrator_service.clients.LlmOrchestrator;
 import java.io.IOException;
 import java.util.Map;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LlmOrchestrationController {
 
   private final LlmOrchestrator orchestrator;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public LlmOrchestrationController(LlmOrchestrator orchestrator) {
     this.orchestrator = orchestrator;
@@ -26,9 +30,9 @@ public class LlmOrchestrationController {
   /**
    * Accepts optional provider query param and either a raw prompt string OR a raw JSON payload.
    *
-   * <p>URL: POST /api/v1/chat (completely implicit)
+   * <p>URL: POST /api/v1/chat
    *
-   * <p>URL: POST /api/v1/chat?provider=openai (explicit routing)
+   * <p>URL: POST /api/v1/chat?provider=openai
    */
   @PostMapping("/chat")
   public ResponseEntity<String> chat(
@@ -41,11 +45,12 @@ public class LlmOrchestrationController {
 
     String formattedPayload = body.trim();
 
-    // Auto-Framing: If the input is plain text and NOT a JSON block, wrap it in OpenAI format
+    // Case A: Input is raw plain text prompt
     if (!formattedPayload.startsWith("{")) {
       formattedPayload =
           """
           {
+            "model": "gpt-4o",
             "messages": [
               {
                 "role": "user",
@@ -55,6 +60,17 @@ public class LlmOrchestrationController {
           }
           """
               .formatted(formattedPayload.replace("\"", "\\\"").replace("\n", "\\n"));
+    } else {
+      // Case B: Input is JSON but might be missing the "model" parameter
+      try {
+        JsonNode jsonNode = objectMapper.readTree(formattedPayload);
+        if (!jsonNode.has("model") || jsonNode.path("model").asText().isBlank()) {
+          ((ObjectNode) jsonNode).put("model", "gpt-4o");
+          formattedPayload = objectMapper.writeValueAsString(jsonNode);
+        }
+      } catch (Exception ignored) {
+        // Fall back to original formattedPayload if parsing fails
+      }
     }
 
     String responseContent = orchestrator.routeChat(provider, formattedPayload);

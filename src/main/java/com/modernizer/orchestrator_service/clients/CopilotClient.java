@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 @ConditionalOnProperty(prefix = "external.copilot", name = "api-key")
 public class CopilotClient implements LlmService {
+
   private final HttpClient httpClient;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final String apiKey;
@@ -22,10 +23,13 @@ public class CopilotClient implements LlmService {
   public CopilotClient(
       HttpClient httpClient,
       @Value("${external.copilot.api-key}") String apiKey,
-      @Value("${external.copilot.base-url:https://api.githubcopilot.com}") String baseUrl) {
+      @Value("${external.copilot.base-url}") String baseUrl) {
     this.httpClient = httpClient;
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl;
+    this.baseUrl =
+        baseUrl != null && baseUrl.endsWith("/")
+            ? baseUrl.substring(0, baseUrl.length() - 1)
+            : baseUrl;
   }
 
   @Override

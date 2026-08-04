@@ -24,16 +24,18 @@ public class GeminiClient implements LlmService {
   public GeminiClient(
       HttpClient httpClient,
       @Value("${external.gemini.api-key}") String apiKey,
-      @Value("${external.gemini.base-url:https://generativelanguage.googleapis.com}")
-          String baseUrl) {
+      @Value("${external.gemini.base-url}") String baseUrl) {
     this.httpClient = httpClient;
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl;
+    this.baseUrl =
+        baseUrl != null && baseUrl.endsWith("/")
+            ? baseUrl.substring(0, baseUrl.length() - 1)
+            : baseUrl;
   }
 
   @Override
   public String chatCompletions(String bodyJson) throws IOException, InterruptedException {
-    String model = extractModel(bodyJson, "gemini-1.5-flash");
+    String model = extractModel(bodyJson, "gemini-2.5-pro");
     String translatedPayload = translateToGeminiPayload(bodyJson);
     String url = baseUrl + "/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
@@ -67,6 +69,7 @@ public class GeminiClient implements LlmService {
         return root.get("model").asText();
       }
     } catch (Exception ignored) {
+      // ignore
     }
     return defaultModel;
   }
@@ -84,7 +87,9 @@ public class GeminiClient implements LlmService {
       String content = msg.path("content").asText();
 
       if ("system".equalsIgnoreCase(role)) {
-        if (!systemPrompt.isEmpty()) systemPrompt.append("\n");
+        if (!systemPrompt.isEmpty()) {
+          systemPrompt.append("\n");
+        }
         systemPrompt.append(content);
       } else {
         ObjectNode geminiContent = objectMapper.createObjectNode();
@@ -110,21 +115,6 @@ public class GeminiClient implements LlmService {
       systemInstruction.set("parts", parts);
       geminiRoot.set("systemInstruction", systemInstruction);
     }
-
-    ObjectNode generationConfig = objectMapper.createObjectNode();
-    boolean hasConfig = false;
-    if (root.has("temperature")) {
-      generationConfig.set("temperature", root.get("temperature"));
-      hasConfig = true;
-    }
-    if (root.has("max_tokens")) {
-      generationConfig.set("maxOutputTokens", root.get("max_tokens"));
-      hasConfig = true;
-    }
-    if (hasConfig) {
-      geminiRoot.set("generationConfig", generationConfig);
-    }
-
     return objectMapper.writeValueAsString(geminiRoot);
   }
 

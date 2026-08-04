@@ -22,10 +22,13 @@ public class OpenAiClient implements LlmService {
   public OpenAiClient(
       HttpClient httpClient,
       @Value("${external.openai.api-key}") String apiKey,
-      @Value("${external.openai.base-url:https://api.openai.com}") String baseUrl) {
+      @Value("${external.openai.base-url}") String baseUrl) {
     this.httpClient = httpClient;
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl;
+    this.baseUrl =
+        baseUrl != null && baseUrl.endsWith("/")
+            ? baseUrl.substring(0, baseUrl.length() - 1)
+            : baseUrl;
   }
 
   @Override
