@@ -181,6 +181,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0'
+    // ── Spring AI Starters (Spring AI 2.0.0) ──
+    
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    // Unified Anthropic Starter (Powers Claude models)
+    implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
 
     // ── Spring AI (Gemini via Vertex AI) ──
     // Unified Google GenAI Starter (Replaces the legacy Vertex AI Gemini starter)
@@ -226,6 +231,7 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     testRuntimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.h2database:h2'
 
     // ── Spring AI (Gemini) — ADD BACK when needed & Boot-4-compatible version exists ──
     // implementation "org.springframework.ai:spring-ai-vertex-ai-gemini-spring-boot-starter"

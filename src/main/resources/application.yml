@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: orchestrator-service
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiChatAutoConfiguration
+  config:
+      import: "optional:file:.env[.properties]"
 
   # Enable virtual threads to process long AI streaming responses efficiently
   threads:
@@ -103,3 +108,22 @@ management:
     metrics:
       export:
         enabled: true
+
+# EPAM DIAL (AI proxy) configuration
+external:
+  epam:
+    dial:
+      base-url: ${EPAM_DIAL_BASE_URL:https://ai-proxy.lab.epam.com/openai/deployments/gemini-2.5-pro}
+      api-key: ${EPAM_DIAL_API_KEY:}
+  openai:
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+    api-key: ${OPENAI_API_KEY:}
+    claude:
+      base-url: ${CLAUDE_BASE_URL:https://api.anthropic.com}
+      api-key: ${CLAUDE_API_KEY:}
+    gemini:
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      api-key: ${GEMINI_API_KEY:}
+    copilot:
+      base-url: ${COPILOT_BASE_URL:https://api.githubcopilot.com}
+      api-key: ${COPILOT_API_KEY:}
