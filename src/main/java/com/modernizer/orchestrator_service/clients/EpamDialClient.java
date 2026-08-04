@@ -60,4 +60,9 @@ public class EpamDialClient implements LlmService {
   public String getProviderName() {
     return "epam-dial";
   }
+
+  @Override
+  public boolean isActive() {
+    return apiKey != null && !apiKey.isBlank();
+  }
 }

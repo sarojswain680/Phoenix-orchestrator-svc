@@ -56,4 +56,9 @@ public class OpenAiClient implements LlmService {
   public String getProviderName() {
     return "openai";
   }
+
+  @Override
+  public boolean isActive() {
+    return apiKey != null && !apiKey.isBlank();
+  }
 }

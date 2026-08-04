@@ -97,4 +97,9 @@ public class ClaudeClient implements LlmService {
   public String getProviderName() {
     return "claude";
   }
+
+  @Override
+  public boolean isActive() {
+    return apiKey != null && !apiKey.isBlank();
+  }
 }

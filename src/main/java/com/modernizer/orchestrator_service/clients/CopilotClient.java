@@ -56,4 +56,9 @@ public class CopilotClient implements LlmService {
   public String getProviderName() {
     return "copilot";
   }
+
+  @Override
+  public boolean isActive() {
+    return apiKey != null && !apiKey.isBlank();
+  }
 }

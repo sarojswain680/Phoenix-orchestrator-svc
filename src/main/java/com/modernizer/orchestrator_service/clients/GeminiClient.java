@@ -132,4 +132,9 @@ public class GeminiClient implements LlmService {
   public String getProviderName() {
     return "gemini";
   }
+
+  @Override
+  public boolean isActive() {
+    return apiKey != null && !apiKey.isBlank();
+  }
 }
