@@ -115,15 +115,21 @@ external:
     dial:
       base-url: ${EPAM_DIAL_BASE_URL:https://ai-proxy.lab.epam.com/openai/deployments/gemini-2.5-pro}
       api-key: ${EPAM_DIAL_API_KEY:}
+
+  # Aligned with "epam" (2 spaces of indentation)
+  gemini:
+    base-url: ${EXTERNAL_GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+    api-key: ${EXTERNAL_GEMINI_API_KEY:}
+
+  # Aligned with "epam" (2 spaces of indentation)
+  claude:
+    base-url: ${EXTERNAL_CLAUDE_BASE_URL:https://api.anthropic.com}
+    api-key: ${EXTERNAL_CLAUDE_API_KEY:}
+
   openai:
-    base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-    api-key: ${OPENAI_API_KEY:}
-    claude:
-      base-url: ${CLAUDE_BASE_URL:https://api.anthropic.com}
-      api-key: ${CLAUDE_API_KEY:}
-    gemini:
-      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
-      api-key: ${GEMINI_API_KEY:}
-    copilot:
-      base-url: ${COPILOT_BASE_URL:https://api.githubcopilot.com}
-      api-key: ${COPILOT_API_KEY:}
+    base-url: ${EXTERNAL_OPENAI_BASE_URL:https://api.openai.com}
+    api-key: ${EXTERNAL_OPENAI_API_KEY:}
+
+  copilot:
+    base-url: ${EXTERNAL_COPILOT_BASE_URL:https://api.githubcopilot.com}
+    api-key: ${EXTERNAL_COPILOT_API_KEY:}

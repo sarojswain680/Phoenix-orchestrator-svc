@@ -62,17 +62,6 @@ public class GeminiClient implements LlmService {
     throw new IOException("Failed to parse Gemini response: " + resp.body());
   }
 
-  private String extractModel(String openAiJson, String defaultModel) {
-    try {
-      JsonNode root = objectMapper.readTree(openAiJson);
-      if (root.has("model")) {
-        return root.get("model").asText();
-      }
-    } catch (Exception ignored) {
-      // ignore
-    }
-    return defaultModel;
-  }
 
   private String translateToGeminiPayload(String openAiJson) throws IOException {
     JsonNode root = objectMapper.readTree(openAiJson);
@@ -117,6 +106,21 @@ public class GeminiClient implements LlmService {
     }
     return objectMapper.writeValueAsString(geminiRoot);
   }
+    private String extractModel(String openAiJson, String defaultModel) {
+        try {
+            JsonNode root = objectMapper.readTree(openAiJson);
+            if (root.has("model")) {
+                String model = root.get("model").asText();
+                // If the model belongs to Gemini's family, use it. Otherwise, use the fallback.
+                if (model.toLowerCase().contains("gemini")) {
+                    return model;
+                }
+            }
+        } catch (Exception ignored) {
+            // ignore
+        }
+        return defaultModel;
+    }
 
   @Override
   public String getProviderName() {

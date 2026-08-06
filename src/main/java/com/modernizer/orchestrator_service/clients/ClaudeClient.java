@@ -61,50 +61,53 @@ public class ClaudeClient implements LlmService {
     throw new IOException("Failed to parse Claude response: " + resp.body());
   }
 
-  private String translateToClaudePayload(String openAiJson) throws IOException {
-    JsonNode root = objectMapper.readTree(openAiJson);
-    ObjectNode claudeRoot = objectMapper.createObjectNode();
+    private String translateToClaudePayload(String openAiJson) throws IOException {
+        JsonNode root = objectMapper.readTree(openAiJson);
+        ObjectNode claudeRoot = objectMapper.createObjectNode();
 
-    // Map model and completion constraints safely
-    claudeRoot.put("model", root.path("model").asText("claude-3-5-sonnet-latest"));
-    claudeRoot.put("max_tokens", root.path("max_tokens").asInt(4096));
+        // Smart Fallback: Discard if it's not a Claude model family string
+        String incomingModel = root.path("model").asText();
+        String claudeModel = (incomingModel.toLowerCase().contains("claude"))
+                ? incomingModel : "claude-3-5-sonnet-latest";
 
-    if (root.has("temperature")) {
-      claudeRoot.set("temperature", root.get("temperature"));
-    }
-    if (root.has("top_p")) {
-      claudeRoot.set("top_p", root.get("top_p"));
-    }
+        claudeRoot.put("model", claudeModel);
+        claudeRoot.put("max_tokens", root.path("max_tokens").asInt(4096));
 
-    ArrayNode openAiMessages = (ArrayNode) root.path("messages");
-    ArrayNode claudeMessages = objectMapper.createArrayNode();
-    StringBuilder systemPrompt = new StringBuilder();
-
-    // Map system prompts to the top level, and clean user/assistant structures
-    for (JsonNode msg : openAiMessages) {
-      String role = msg.path("role").asText();
-      String content = msg.path("content").asText();
-
-      if ("system".equalsIgnoreCase(role) || "developer".equalsIgnoreCase(role)) {
-        if (!systemPrompt.isEmpty()) {
-          systemPrompt.append("\n");
+        if (root.has("temperature")) {
+            claudeRoot.set("temperature", root.get("temperature"));
         }
-        systemPrompt.append(content);
-      } else {
-        ObjectNode claudeMsg = objectMapper.createObjectNode();
-        claudeMsg.put("role", "assistant".equalsIgnoreCase(role) ? "assistant" : "user");
-        claudeMsg.put("content", content);
-        claudeMessages.add(claudeMsg);
-      }
-    }
+        if (root.has("top_p")) {
+            claudeRoot.set("top_p", root.get("top_p"));
+        }
 
-    if (!systemPrompt.isEmpty()) {
-      claudeRoot.put("system", systemPrompt.toString());
-    }
-    claudeRoot.set("messages", claudeMessages);
+        ArrayNode openAiMessages = (ArrayNode) root.path("messages");
+        ArrayNode claudeMessages = objectMapper.createArrayNode();
+        StringBuilder systemPrompt = new StringBuilder();
 
-    return objectMapper.writeValueAsString(claudeRoot);
-  }
+        for (JsonNode msg : openAiMessages) {
+            String role = msg.path("role").asText();
+            String content = msg.path("content").asText();
+
+            if ("system".equalsIgnoreCase(role) || "developer".equalsIgnoreCase(role)) {
+                if (!systemPrompt.isEmpty()) {
+                    systemPrompt.append("\n");
+                }
+                systemPrompt.append(content);
+            } else {
+                ObjectNode claudeMsg = objectMapper.createObjectNode();
+                claudeMsg.put("role", "assistant".equalsIgnoreCase(role) ? "assistant" : "user");
+                claudeMsg.put("content", content);
+                claudeMessages.add(claudeMsg);
+            }
+        }
+
+        if (!systemPrompt.isEmpty()) {
+            claudeRoot.put("system", systemPrompt.toString());
+        }
+        claudeRoot.set("messages", claudeMessages);
+
+        return objectMapper.writeValueAsString(claudeRoot);
+    }
 
   @Override
   public String getProviderName() {
